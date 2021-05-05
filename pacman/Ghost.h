@@ -36,11 +36,12 @@ class Ghost
     private:
 		//The X and Y offsets of the pac
 		int mPosX, mPosY;
-		int rany; int ranx;
-        //state of the ghost 2 = stuck 
-        int state; //0- chase 1-random but active -1 = run away vulnerable
-        //count for changing the state
-        int count;
+		int id;
+		int ran[6][2] = {{20, 1020}, {1020, 20}, {1860,20}, {1860, 1020}, {1020,1020}, {20, 20}};// corners
+        	//state of the ghost -1 = stuck 
+        	int state; //0- chase 1-random but active 0 = run away vulnerable
+        	//count for changing the state
+        	int count;
 		//The velocity of the pac
 		int mVelX, mVelY;
 };
