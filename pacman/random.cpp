@@ -20,6 +20,7 @@ const int SCREEN_HEIGHT = 600;
 const int LEVEL_WIDTH = 1920;
 const int LEVEL_HEIGHT = 1080;
 vector<SDL_Rect> red_blocks;
+vector<SDL_Rect> small_points;
 
 class rect_para{
 public:
@@ -117,6 +118,7 @@ SDL_Renderer* gRenderer = NULL;
 LTexture gPacTexture;
 LTexture gBGTexture;	//this is the texture we got to manipulate
 LTexture gGh1Texture;
+LTexture gspoint;
 
 LTexture::LTexture()
 {
@@ -335,8 +337,7 @@ int LTexture::getPitch()
 	return mPitch;
 }
 
-void Pac::render( int camX, int camY )
-{
+void Pac::render( int camX, int camY ){
     //Show the pac relative to the camera
 	gPacTexture.render( mPosX - camX, mPosY - camY );
 }
@@ -433,6 +434,11 @@ bool loadMedia()
 	if( !gGh1Texture.loadFromFile( "icon.png" ) )
 	{
 		printf( "Failed to load gh1 texture!\n" );
+		success = false;
+	}
+	if (!gspoint.loadFromFile("smallpoint.png"))
+	{
+		printf("Failed to load small points\n");
 		success = false;
 	}
 	//Load background texture
@@ -622,6 +628,24 @@ int main( int argc, char* args[] )
 		}
 		else
 		{	
+			int no_redblks = red_blocks.size();
+			int no_smlpts =0;
+			bool intersects =false;
+			for(int x = 20; x < 1900; x+=40){
+				for(int y = 20; y < 1060; y+=40){
+					intersects = false;
+					SDL_Rect block = {x,y,40,40};
+					for (int i=0; i<no_redblks; i++){
+						if(SDL_HasIntersection(&block, &red_blocks[i])){
+							intersects = true;
+						}
+					}
+					if(!intersects){
+						small_points.push_back(block);
+						no_smlpts++;
+					}
+				}
+			}
 			//Main loop flag
 			bool quit = false;
 
@@ -631,7 +655,10 @@ int main( int argc, char* args[] )
 			//The Pac that will be moving around on the screen
 			Pac pac(red_blocks);
 
-			Ghost gh1(red_blocks);
+			Ghost gh1(red_blocks, 0);
+			Ghost gh2(red_blocks, 1);
+			Ghost gh3(red_blocks, 3);
+			Ghost gh4(red_blocks, 5);
 
 			//The camera area
 			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
@@ -655,7 +682,27 @@ int main( int argc, char* args[] )
 				//Move the Pac
 				pac.move();
 				gh1.move(pac.getPosX(), pac.getPosY());
+				gh2.move(pac.getPosX(), pac.getPosY());
+				gh3.move(pac.getPosX(), pac.getPosY());
+				gh4.move(pac.getPosX(), pac.getPosY());
 
+				if(SDL_HasIntersection(&pac.PacBox, &gh1.PacBox)){
+					printf("GAME OVER caught by Ghost 1\n");
+					close();
+					return 0;
+				}else if(SDL_HasIntersection(&pac.PacBox, &gh2.PacBox)){
+					printf("GAME OVER caught by Ghost 2\n");
+					close();
+					return 0;
+				}else if(SDL_HasIntersection(&pac.PacBox, &gh3.PacBox)){
+					printf("GAME OVER caught by Ghost 3\n");
+					close();
+					return 0;
+				}else if(SDL_HasIntersection(&pac.PacBox, &gh4.PacBox)){
+					printf("GAME OVER caught by Ghost 4\n");
+					close();
+					return 0;
+				}
 				//Center the camera over the Pac
 				camera.x = ( pac.getPosX() + Pac::PAC_WIDTH / 2 ) - SCREEN_WIDTH / 2;
 				camera.y = ( pac.getPosY() + Pac::PAC_HEIGHT / 2 ) - SCREEN_HEIGHT / 2;
@@ -681,15 +728,25 @@ int main( int argc, char* args[] )
 				//Clear screen
 				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 				SDL_RenderClear( gRenderer );
-
 				//Render background
 				gBGTexture.render( 0, 0, &camera );
-
-				//Render objects
+				//render points
+				for(int i=0; i<no_smlpts; i++){
+					if(i>=small_points.size()){break;}
+					SDL_Rect block = small_points[i];
+					if(SDL_HasIntersection(&pac.PacBox, &block) ){
+						small_points.erase(small_points.begin()+i);
+						continue;
+					}
+					gspoint.render(block.x - camera.x+10, block.y - camera.y+10);
+				}
 				
-				pac.render( camera.x, camera.y);
+				//Render objects
 				gh1.render(camera.x, camera.y);
-
+				gh2.render(camera.x, camera.y);
+				gh3.render(camera.x, camera.y);
+				gh4.render(camera.x, camera.y);
+				pac.render( camera.x, camera.y);
 				//Update screen
 				SDL_RenderPresent( gRenderer );
 			}
