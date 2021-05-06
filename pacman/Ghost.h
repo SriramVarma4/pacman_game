@@ -19,7 +19,7 @@ class Ghost
 		int PAC_VEL = 5;
 
 		//Initializes the variables
-		Ghost(vector<SDL_Rect> blocks);
+		Ghost(vector<SDL_Rect> blocks, int ID);
 		//detects collision with the blocks
 		bool collision();
 
