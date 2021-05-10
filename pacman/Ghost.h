@@ -15,17 +15,18 @@ class Ghost
 		//The dimensions of the pac
 		static const int PAC_WIDTH = 40;
 		static const int PAC_HEIGHT = 40;
-		vector<node> cross;
+		vector<node> nodes;
+		vector<node> nodes_copy;
 		vector<SDL_Rect> Red_blocks;
 		//Maximum axis velocity of the pac
 		int PAC_VEL = 5;
 
 		//Initializes the variables
-		Ghost(vector<SDL_Rect> red_blocks, vector<node> cros, int ID);
+		Ghost(vector<SDL_Rect> red_blocks, vector<node> Nodes, int ID);
 		
 		bool collision();	//collision to prohibited area
 
-		node on_cross();	//detects whether the ghost is on the instersection
+		int on_cross();	//detects whether the ghost is on the instersection
 		
 		//Moves the ghost
 		void move(int pacx, int pacy);
@@ -40,6 +41,8 @@ class Ghost
     private:
 		//The X and Y offsets of the pac
 		int mPosX, mPosY;
+		int prevx, prevy;
+		bool comeback;
 		int id;
 		int ran[6][2] = {{20, 1020}, {1020, 20}, {1860,20}, {1860, 1020}, {1020,1020}, {20, 20}};//four corners
         //state of the ghost 2 = stuck 
