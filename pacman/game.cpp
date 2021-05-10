@@ -488,20 +488,20 @@ again:		//Load media
 							push = true;
 						}
 						if(push){
-							temp.clear();
-							if(nobloc[0]){ temp.push_back(true);  }//left
-							else{ temp.push_back(false); }
+							string temp = "";
+							if(nobloc[0]){ temp += "1";  }//left
+							else{ temp += "0"; }
 
-							if(nobloc[1]){ temp.push_back(true); }//top
-							else{ temp.push_back(false); }
+							if(nobloc[1]){ temp += "1"; }//top
+							else{ temp += "0"; }
 							
-							if(nobloc[2]){ temp.push_back(true); }//right
-							else{ temp.push_back(false); }
+							if(nobloc[2]){ temp += "1"; }//right
+							else{ temp += "0"; }
 							
-							if(nobloc[3]){ temp.push_back(true); }//bottom
-							else{ temp.push_back(false); }
+							if(nobloc[3]){ temp += "1"; }//bottom
+							else{ temp += "0"; }
 							//printf("%i,%i,%i\n",x,y,4-no_paths);
-							node newnode(x,y,temp, 4-no_paths);
+							node newnode(x,y,temp, no_paths);
 							nodes.push_back(newnode);
 						}
 					}
