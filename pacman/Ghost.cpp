@@ -1,11 +1,13 @@
 #include "Ghost.h"
-
+#include <time.h>
 using namespace std;
 
-Ghost::Ghost(vector<SDL_Rect> blocks, vector<node> nodes, int ID){
+Ghost::Ghost(vector<SDL_Rect> blocks, vector<node> Nodes, int ID){
     //Initialize the offsets
     id = ID;
-    cross = nodes;
+     nodes= Nodes;
+	nodes_copy = Nodes;
+	cameback = false;
 	Red_blocks = blocks;
     switch (id)
     {//{{20, 1020}, {1020, 20}, {1860,20}, {1860, 1020}, {1020,1020}, {20, 20}};
@@ -39,102 +41,116 @@ bool Ghost::collision(void){
 	return false;
 }
 
-node Ghost::on_cross(){
-    int n = cross.size();
+int Ghost::on_cross(){
+    int n = nodes.size();
     for (int i=0; i<n; i++){
-        if(PacBox.x == cross[i].x, PacBox.y == cross[i].y){
-            return cross[i];
+        if(mPosX == nodes[i].x && mPosY == nodes[i].y){
+            return i;
         }
     }
-    vector<bool> dummy;
-    node temp(0,0, dummy,-1);
+    return -1;
 }
 
 void Ghost::move(int pacx, int pacy)
 {   
-    //move towards the pacman
-    //count++;
-    /*if(count == 0){
-        state = 1; //chasing
-    }else if(count == 2000){
-        state = -2;
-        count = -100000;
-    }*/
     int vdiff = mPosY - pacy;
     int hdiff = mPosX - pacx;
-    //node posi = on_cross();
-    //int ways = posi.ways;
-    //if(ways == 1){ state = 2; mVelX = -mVelX; mVelY= -mVelY; }
-    if(state == 1){//chasing
-	    if(abs(vdiff)>abs(hdiff)){
-            if(vdiff<0){mVelY = 5; goto action;}
-            else{
-                mVelY = -5;
-                goto action;
-            }
-        }else{
-            if(hdiff>0) {mVelX = -5; goto action;}
-            else {mVelX = 5; goto action;}
-        }
-        if(count == 1000){ state = -1; count=0;}
-    }else if(state == -1){//going to corner
-        int ranx = ran[id][0];
-        int rany = ran[id][1];
-        int rvdif = mPosY - rany;
-        int rhdif = mPosX - ranx;
-        if(abs(vdiff)>abs(hdiff)){
-            if(rvdif<0){mVelY = 5; goto action;}
-            else{
-                mVelY = -5;
-                goto action;
-            }
-        }else{
-            if(rhdif>0) {mVelX = -5; goto action;}
-            else {mVelX = 5; goto action;}
-        }
-        if (count == 300){state = 1; count=0; id++;}
+    //cout<<vdiff<<'\n';
+    int posi = on_cross(); 
+    node current_node(0,0,"",-1);
+    if(posi>=0){
+        current_node = nodes[posi];
     }
-    else if( state == -2){//runaway
-        if(abs(vdiff) > abs(hdiff)){
-            if(vdiff>0){mVelY = 5;}
-            else{mVelY = -5;}
-        }else{
-            if(hdiff<0){mVelX = -5;}
-            else{mVelX = 5;}
+    int ways = current_node.ways;
+    string path = current_node.paths;
+    if(ways == 1){ 
+        mVelX = -mVelX; mVelY= -mVelY;
+        prevx = mPosX; prevy = mPosY;
+        if(state == 1){
+            cameback = true;
         }
+    }
+    else if(state == 1 && ways!=-1){//chasing
+        if(cameback){//block the single path
+            string temp_path = nodes[posi].paths;
+            if(mVelX>0){temp_path = "0" + temp_path.substr(1,3);}
+            else if(mVelX<0){temp_path = temp_path.substr(0,2) + "0" + temp_path[3];}
+            else if(mVelY>0){temp_path = temp_path[0] + "0" + temp_path.substr(2,2);}
+            else if(mVelY<0){temp_path = temp_path.substr(0,3) + "0";}
+            nodes[posi].paths = temp_path;
+            cameback = false;
+        }
+        mVelX =0; mVelY=0;
+	    if(abs(vdiff)>abs(hdiff)){
+            if(vdiff>0){
+                if(path[1] == '1' && prevy>=mPosY){mVelY = -5;}
+                else if(path[2] == '1' && prevx<=mPosX){ mVelX = 5;}//move right
+                else if(path[0] == '1' && prevx>=mPosX){ mVelX = -5;}
+                else if(path[3] == '1' && prevy<=mPosY){mVelY= 5;}//move down
+            }else{
+                if(path[3] == '1' && prevy<=mPosY){mVelY = 5; }
+                else if(path[0] == '1' && prevx>=mPosX){ mVelX = -5; }//move left
+                else if(path[2] == '1' && prevx<=mPosX){ mVelX = 5; }
+                else if(path[1] == '1' && prevy>=mPosY){mVelY= -5; }//move up
+            }
+        }else{
+            if(hdiff>0) {
+                //cout<<( path)<<'\n';
+                if(path[0]== '1' && prevx>=mPosX){ mVelX=-5; }
+                else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5;  }
+                else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
+                else if(path[2] == '1' && prevx<=mPosX){ mVelY=0; }
+            }
+            else {
+                if(path[2]=='1' && prevx<=mPosX){mVelX=5; }
+                else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
+                else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5; }
+                else if(path[0] == '1' && prevx>=mPosX){ mVelY=0; }
+            }
+        }
+        //if(count == 1000){ state = -1; count=0;}
+        prevx = mPosX; prevy = mPosY;
+    }else if(state == 2 && ways!=-1){//runaway
+        mVelX =0; mVelY=0;
+	    if(abs(vdiff)>abs(hdiff)){
+            if(vdiff>0){
+                if(path[3] == '1' && prevy <= mPosY){mVelY = 5;}
+                else if(path[2] == '1' && prevx <= mPosX){ mVelX = 5;}//move right
+                else if(path[0] == '1' && prevx >= mPosX){ mVelX = -5;}
+                else if(path[1] == '1' && prevy>= mPosY){mVelY= 0;}//move down
+            }else{
+                if(path[1] == '1' && prevy >= mPosY){mVelY = -5; }
+                else if(path[0] == '1' && prevx >= mPosX){ mVelX = -5; }
+                else if(path[2] == '1' && prevx <= mPosX){ mVelX = 5; }
+                else if(path[3] && prevy <= mPosY){ mVelY= 0; }
+            }
+        }else{
+            if(hdiff>0) {
+                //cout<<( path)<<'\n';
+                if(path[2]== '1' && prevx<=mPosX){ mVelX=5; }
+                else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5;  }
+                else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
+                else if(path[0] == '1' && prevx>=mPosX){ mVelX=0; }
+            }
+            else {
+                if(path[0]=='1' && prevx>=mPosX){mVelX=-5; }
+                else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5; }
+                else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
+                else if(path[2] == '1' && prevx<=mPosX){ mVelX=0; }
+            }
+        }
+        prevx = mPosX; prevy = mPosY;
     }
     //Move the PAC left or right
 action:
-    mPosX += mVelX;
-	PacBox.x = mPosX;
-    //top_blk = false; rit = false; bot_blk = false; lef_blk=false;
-    //If the PAC cant move horizontally
-    if( collision())
-    {
-        mPosX -= mVelX;
-        mVelX=0;
-        PacBox.x = mPosX;
-    }
+    /*if(vdiff<200 && hdiff<200 && abs(vdiff)>abs(hdiff)){
+        cout<<mPosX<<','<<mPosY<<','<<path<<','<<mVelY<<'\n';
+    }*/
+    mPosX += mVelX; mPosY += mVelY; 
     
-    //Move the PAC up or down
-    mPosY += mVelY;
-	PacBox.y =mPosY;
-    //If the PAC cant move vertically
-    if( collision() )
-    {
-        mPosY -= mVelY;
-        mVelY=0;
-		PacBox.y = mPosY;
-    }
-    if(mVelX==0 && mVelY ==0 && count%50 == 0){
-        count = 0;
-        state = -state; //going to corner
-        id++;
-        //printf("%i,%i, %i\n",id, ran[id][0],ran[id][1]);
-    }
-    if(id == 6){
-        id =0;
-    }
+    PacBox.x = mPosX;
+    
+    PacBox.y =mPosY;
 }
 
 int Ghost::getPosX(){ return mPosX; }
