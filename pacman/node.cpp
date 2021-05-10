@@ -1,7 +1,7 @@
 #include "node.h"
 using namespace std;
 
-node::node(int X, int Y, vector<bool> path, int way){
+node::node(int X, int Y, string path, int way){
     x=X;
     y=Y;
     ways = way;
