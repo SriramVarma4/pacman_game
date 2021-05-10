@@ -10,8 +10,8 @@ class node{
         int x;  //xcoordinate
         int y;  //ycoordinate
         int ways;
-        vector<bool> paths;
-        node(int X, int Y, vector<bool> path, int way);
+        string paths;
+        node(int X, int Y, string path, int way);
 };
 
 #endif
