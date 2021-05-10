@@ -223,25 +223,11 @@ bool loadMedia()
 	{
 		printf( "Failed to load pacman texture!\n" );
 		success = false;
-	}else{
-		if( !gPacTexture.lockTexture() ){ printf( "Unable to lock Pacman' texture!\n" ); }
-		else{
-			Uint32 format = SDL_GetWindowPixelFormat( gWindow );
-			SDL_PixelFormat* mappingFormat = SDL_AllocFormat( format );
-			Uint32 transparent = SDL_MapRGBA( mappingFormat, 0x00, 0x00, 0x00, 0x00 );
-			Uint32* pixels = (Uint32*)gPacTexture.getPixels();
-			int pixelCount = ( gPacTexture.getPitch() / 4 ) * gPacTexture.getHeight();
-			int width = gPacTexture.getPitch()/4;
-			for(int i=0; i<pixelCount; i++){
-				if(pixels[i]==16711935){
-					pixels[i] = transparent;
-				}
-			}
-			//Unlock texture
-			gPacTexture.unlockTexture();
-			//Free format
-			SDL_FreeFormat( mappingFormat );
-		}
+	}
+	if( !gGameover.loadFromFile( "images/gameover.jpg" ) )
+	{
+		printf( "Failed to load gameover texture!\n" );
+		success = false;
 	}
 	//load ghost
 	if( !gGh1Texture.loadFromFile( "images/ghost.png" ) )
@@ -428,11 +414,6 @@ bool gameover(){
 	gBGTexture.free();
 	gGh1Texture.free();
 	red_blocks.clear();
-	if( !gGameover.loadFromFile( "images/gameover.jpg" ) )
-	{
-		printf( "Failed to load gameover texture!\n" );
-		success = false;
-	}
 
 	return success;
 	//animation;
@@ -453,15 +434,14 @@ again:		//Load media
 		}
 		else
 		{	
-			vector<node> cross;
+			vector<node> nodes;
 			vector<SDL_Rect> small_points;
 			
 			int no_redblks = red_blocks.size();
 			bool intersects =false;
 			int no_paths = 4;
 			SDL_Rect check_blocks[4];
-			bool nobloc[4] ={true,true,true,true};
-			vector<bool> temp;
+			
 
 			for(int x = 20; x < 1900; x+=40){
 				for(int y = 20; y < 1060; y+=40){
@@ -476,6 +456,7 @@ again:		//Load media
 						bool push = false;
 						small_points.push_back(block);
 						no_paths = 4;
+						bool nobloc[4] ={true,true,true,true};
 						check_blocks[0] = {x-40,y,40,40};	//left
 						check_blocks[1] = {x, y-40, 40, 40};//top
 						check_blocks[2] = {x+40, y, 40, 40};//right
@@ -521,7 +502,7 @@ again:		//Load media
 							else{ temp.push_back(false); }
 							//printf("%i,%i,%i\n",x,y,4-no_paths);
 							node newnode(x,y,temp, 4-no_paths);
-							cross.push_back(newnode);
+							nodes.push_back(newnode);
 						}
 					}
 				}
@@ -536,10 +517,10 @@ again:		//Load media
 			//The Pac that will be moving around on the screen
 			Pac pac(red_blocks);
 
-			Ghost gh1(red_blocks, cross, 0);
-			Ghost gh2(red_blocks, cross, 1);
-			Ghost gh3(red_blocks, cross, 3);
-			Ghost gh4(red_blocks, cross, 5);
+			Ghost gh1(red_blocks, nodes, 0);
+			Ghost gh2(red_blocks, nodes, 1);
+			Ghost gh3(red_blocks, nodes, 3);
+			Ghost gh4(red_blocks, nodes, 5);
  
 			//The camera area
 			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
