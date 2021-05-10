@@ -42,7 +42,7 @@ class Ghost
 		//The X and Y offsets of the pac
 		int mPosX, mPosY;
 		int prevx, prevy;
-		bool comeback;
+		bool cameback;
 		int id;
 		int ran[6][2] = {{20, 1020}, {1020, 20}, {1860,20}, {1860, 1020}, {1020,1020}, {20, 20}};//four corners
         //state of the ghost 2 = stuck 
