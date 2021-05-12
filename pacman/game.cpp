@@ -210,7 +210,7 @@ bool init()
 			printf( "Warning: Linear texture filtering not enabled!" );
 		}
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT + 50, SDL_WINDOW_SHOWN );
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -451,7 +451,6 @@ void close(){
 	gbottom_strip.free();
 	gBGTexture.free();
 	gGh1Texture.free();
-	gGameover.free();
 	//free sound effect
 	Mix_FreeChunk( gMunch_a );
 	Mix_FreeChunk(gMunch_b);
@@ -610,7 +609,7 @@ again:		//Load media
 					//Handle input for the Pac
 					pac.handleEvent( e );
 				}
-				if(over){ //Clear screen
+				if(game_state == "over"){ //Clear screen
 					textColor = {255,0,0};
 					SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
 					SDL_RenderClear( gRenderer );
