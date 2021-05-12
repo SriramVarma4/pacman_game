@@ -15,7 +15,7 @@ Ghost::Ghost(vector<SDL_Rect> blocks, vector<node> Nodes, int ID){
     case 0: mPosX = 1860; mPosY = 1020; break;
     case 1: mPosX = 1020; mPosY = 20; break;
     case 2: mPosX = 20; mPosY = 1020; break;
-    case 4: mPosX = 1860; mPosY = 20; break;
+    case 3: mPosX = 1860; mPosY = 20; break;
     default:
         mPosY = 1860; mPosX =1020; break;
     }
@@ -144,6 +144,8 @@ void Ghost::move(int pacx, int pacy)
             }
         }
         prevx = mPosX; prevy = mPosY;
+    }else if(ways == -1 && mVelX==0 && mVelY==0){
+	    mVelX=-5; mVelY=0;
     }
     //Move the PAC left or right
 action:
