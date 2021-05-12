@@ -1,5 +1,6 @@
 #include "Ghost.h"
 #include <time.h>
+#include <string>
 using namespace std;
 
 Ghost::Ghost(vector<SDL_Rect> blocks, vector<node> Nodes, int ID){
@@ -12,14 +13,11 @@ Ghost::Ghost(vector<SDL_Rect> blocks, vector<node> Nodes, int ID){
     switch (id)
     {//{{20, 1020}, {1020, 20}, {1860,20}, {1860, 1020}, {1020,1020}, {20, 20}};
     case 0: mPosX = 1860; mPosY = 1020; break;
-    case 1: mPosX = 20; mPosY = 1020; break;
-    case 2: mPosX = 1020; mPosY = 1020; break;
-    case 3: mPosX = 1020; mPosY = 20; break;
-    case 4: mPosX = 1860; mPosY = 460; break;
-    case 5: mPosX = 1860; mPosY = 20; break;
-    
+    case 1: mPosX = 1020; mPosY = 20; break;
+    case 2: mPosX = 20; mPosY = 1020; break;
+    case 4: mPosX = 1860; mPosY = 20; break;
     default:
-        mPosY = 1020; mPosX =20; break;
+        mPosY = 1860; mPosX =1020; break;
     }
 	PacBox.x=mPosX;
 	PacBox.y=mPosY;
@@ -64,7 +62,12 @@ void Ghost::move(int pacx, int pacy)
     int ways = current_node.ways;
     string path = current_node.paths;
     if(ways == 1){ 
-        mVelX = -mVelX; mVelY= -mVelY;
+        mVelX =0; mVelY=0;
+        if(path[0] == '1'){mVelX = -5;}
+        else if(path[1] == '1'){mVelY = -5;}
+        else if(path[2] == '1'){mVelX = 5;}
+        else if(path[3] == '1'){mVelY = 5;}
+	    
         prevx = mPosX; prevy = mPosY;
         if(state == 1){
             cameback = true;
@@ -73,11 +76,12 @@ void Ghost::move(int pacx, int pacy)
     else if(state == 1 && ways!=-1){//chasing
         if(cameback){//block the single path
             string temp_path = nodes[posi].paths;
-            if(mVelX>0){temp_path = "0" + temp_path.substr(1,3);}
-            else if(mVelX<0){temp_path = temp_path.substr(0,2) + "0" + temp_path[3];}
-            else if(mVelY>0){temp_path = temp_path[0] + "0" + temp_path.substr(2,2);}
-            else if(mVelY<0){temp_path = temp_path.substr(0,3) + "0";}
+            if(mVelX>0){temp_path = "0" + temp_path.substr(1,3);}//block left
+            else if(mVelX<0){temp_path = temp_path.substr(0,2) + "0" + temp_path.substr(3,1);}//block rit
+            else if(mVelY>0){temp_path = temp_path.substr(0,1) + "0" + temp_path.substr(2,2);}//block top
+            else if(mVelY<0){temp_path = temp_path.substr(0,3) + "0";}//block bottom
             nodes[posi].paths = temp_path;
+            nodes[posi].ways = ways - 1;
             cameback = false;
         }
         mVelX =0; mVelY=0;
@@ -99,13 +103,13 @@ void Ghost::move(int pacx, int pacy)
                 if(path[0]== '1' && prevx>=mPosX){ mVelX=-5; }
                 else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5;  }
                 else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
-                else if(path[2] == '1' && prevx<=mPosX){ mVelY=0; }
+                else if(path[2] == '1' && prevx<=mPosX){ mVelX=5; }
             }
             else {
                 if(path[2]=='1' && prevx<=mPosX){mVelX=5; }
                 else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
                 else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5; }
-                else if(path[0] == '1' && prevx>=mPosX){ mVelY=0; }
+                else if(path[0] == '1' && prevx>=mPosX){ mVelX=-5; }
             }
         }
         //if(count == 1000){ state = -1; count=0;}
@@ -117,12 +121,12 @@ void Ghost::move(int pacx, int pacy)
                 if(path[3] == '1' && prevy <= mPosY){mVelY = 5;}
                 else if(path[2] == '1' && prevx <= mPosX){ mVelX = 5;}//move right
                 else if(path[0] == '1' && prevx >= mPosX){ mVelX = -5;}
-                else if(path[1] == '1' && prevy>= mPosY){mVelY= 0;}//move down
+                else if(path[1] == '1' && prevy>= mPosY){mVelY= -5;}//move down
             }else{
                 if(path[1] == '1' && prevy >= mPosY){mVelY = -5; }
                 else if(path[0] == '1' && prevx >= mPosX){ mVelX = -5; }
                 else if(path[2] == '1' && prevx <= mPosX){ mVelX = 5; }
-                else if(path[3] && prevy <= mPosY){ mVelY= 0; }
+                else if(path[3] && prevy <= mPosY){ mVelY= 5; }
             }
         }else{
             if(hdiff>0) {
@@ -130,13 +134,13 @@ void Ghost::move(int pacx, int pacy)
                 if(path[2]== '1' && prevx<=mPosX){ mVelX=5; }
                 else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5;  }
                 else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
-                else if(path[0] == '1' && prevx>=mPosX){ mVelX=0; }
+                else if(path[0] == '1' && prevx>=mPosX){ mVelX=-5; }
             }
             else {
                 if(path[0]=='1' && prevx>=mPosX){mVelX=-5; }
                 else if(path[1] == '1' && prevy>=mPosY){ mVelY=-5; }
                 else if(path[3] == '1' && prevy<=mPosY){ mVelY=5; }
-                else if(path[2] == '1' && prevx<=mPosX){ mVelX=0; }
+                else if(path[2] == '1' && prevx<=mPosX){ mVelX=5; }
             }
         }
         prevx = mPosX; prevy = mPosY;
