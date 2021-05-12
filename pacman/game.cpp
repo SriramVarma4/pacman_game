@@ -590,8 +590,8 @@ again:		//Load media
 
 			Ghost gh1(red_blocks, nodes, 0);
 			Ghost gh2(red_blocks, nodes, 1);
-			Ghost gh3(red_blocks, nodes, 3);
-			Ghost gh4(red_blocks, nodes, 5);
+			Ghost gh3(red_blocks, nodes, 2);
+			Ghost gh4(red_blocks, nodes, 3);
  
 			//The camera area
 			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
