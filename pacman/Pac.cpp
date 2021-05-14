@@ -1,8 +1,9 @@
 #include "Pac.h"
 using namespace std;
 
-Pac::Pac(vector<SDL_Rect> blocks){
+Pac::Pac(vector<SDL_Rect> blocks,int ID){
     //Initialize the offsets
+    id = ID; 
 	Red_blocks = blocks;
     mPosX = 20;
     mPosY = 20;
