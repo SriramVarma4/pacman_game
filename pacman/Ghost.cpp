@@ -12,18 +12,17 @@ Ghost::Ghost(vector<SDL_Rect> blocks, vector<node> Nodes, int ID){
 	Red_blocks = blocks;
     switch (id)
     {//{{20, 1020}, {1020, 20}, {1860,20}, {1860, 1020}, {1020,1020}, {20, 20}};
-    case 0: mPosX = 1860; mPosY = 1020; break;
-    case 1: mPosX = 1020; mPosY = 20; break;
-    case 2: mPosX = 20; mPosY = 1020; break;
-    case 4: mPosX = 1860; mPosY = 20; break;
+    case 0: mPosX = 1860; mPosY = 1020; count = 0; break;
+    case 1: mPosX = 1020; mPosY = 20; count = 300; break;
+    case 2: mPosX = 20; mPosY = 1020; count = 600; break;
+    case 4: mPosX = 1860; mPosY = 20; count = 900; break;
     default:
-        mPosY = 1860; mPosX =1020; break;
+        mPosY = 1860; mPosX =1020; count = 0; break;
     }
 	PacBox.x=mPosX;
 	PacBox.y=mPosY;
 	PacBox.w=40;
 	PacBox.h=40;
-    count = 0;
     //Initialize the velocity
     mVelX = 0;
     mVelY = 0;
@@ -51,9 +50,39 @@ int Ghost::on_cross(){
 
 void Ghost::move(int pacx, int pacy)
 {   
-    int vdiff = mPosY - pacy;
-    int hdiff = mPosX - pacx;
-    //cout<<vdiff<<'\n';
+    int vdiff;
+    int hdiff;
+    count++;
+    if(count == 1000 && state == 1) { count=0; state = -1; }
+    else if(count == freetime && state == -1){count=0; state = 1;}//alternates between chase, pseudorandom
+    switch (id){
+    case 0:
+        if(state == -1){pacx = 20; pacy=20;}
+        vdiff = mPosY - pacy;
+        hdiff = mPosX - pacx;
+        break;
+    case 1:
+        if(state == -1){pacx = 1860; pacy=20;}
+        vdiff = mPosY - pacy;
+        hdiff = mPosX - pacx - 80;
+        break;
+    case 2:
+        if(state == -1){pacx = 1020; pacy=20;}
+        vdiff = mPosY - pacy-80;
+        hdiff = mPosX - pacx;
+        break;
+    case 3:
+        if(state == -1){pacx = 20; pacy=1020;}
+        vdiff = mPosY - pacy;
+        hdiff = mPosX - pacx+80;
+        break;
+    default:
+        if(state == -1){pacx = 20; pacy=20;}
+        vdiff = mPosY - pacy;
+        hdiff = mPosX - pacx;
+    }
+	
+	
     int posi = on_cross(); 
     node current_node(0,0,"",-1);
     if(posi>=0){
@@ -73,7 +102,7 @@ void Ghost::move(int pacx, int pacy)
             cameback = true;
         }
     }
-    else if(state == 1 && ways!=-1){//chasing
+    else if(ways!=-1){//chasing
         if(cameback){//block the single path
             string temp_path = nodes[posi].paths;
             if(mVelX>0){temp_path = "0" + temp_path.substr(1,3);}//block left
@@ -126,7 +155,7 @@ void Ghost::move(int pacx, int pacy)
                 if(path[1] == '1' && prevy >= mPosY){mVelY = -5; }
                 else if(path[0] == '1' && prevx >= mPosX){ mVelX = -5; }
                 else if(path[2] == '1' && prevx <= mPosX){ mVelX = 5; }
-                else if(path[3] && prevy <= mPosY){ mVelY= 5; }
+                else if(path[3] == '1' && prevy <= mPosY){ mVelY= 5; }
             }
         }else{
             if(hdiff>0) {
@@ -144,12 +173,12 @@ void Ghost::move(int pacx, int pacy)
             }
         }
         prevx = mPosX; prevy = mPosY;
+    }else if(ways == -1 && mVelX==0 && mVelY==0){
+	    mVelX=-5; mVelY=0;
     }
     //Move the ghost left or right
 action:
-    /*if(vdiff<200 && hdiff<200 && abs(vdiff)>abs(hdiff)){
-        cout<<mPosX<<','<<mPosY<<','<<path<<','<<mVelY<<'\n';
-    }*/
+
     mPosX += mVelX; mPosY += mVelY; 
     
     PacBox.x = mPosX;
