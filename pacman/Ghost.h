@@ -38,6 +38,7 @@ class Ghost
 		int getPosX();
 		int getPosY();
         SDL_Rect PacBox;
+		int freetime = 300;
     private:
 		//The X and Y offsets of the pac
 		int mPosX, mPosY;
