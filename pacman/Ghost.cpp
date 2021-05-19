@@ -15,7 +15,7 @@ Ghost::Ghost(vector<SDL_Rect> blocks, vector<node> Nodes, int ID){
     case 0: mPosX = 1860; mPosY = 1020; count = 0; break;
     case 1: mPosX = 1020; mPosY = 20; count = 300; break;
     case 2: mPosX = 20; mPosY = 1020; count = 600; break;
-    case 4: mPosX = 1860; mPosY = 20; count = 900; break;
+    case 3: mPosX = 1860; mPosY = 20; count = 900; break;
     default:
         mPosY = 1860; mPosX =1020; count = 0; break;
     }
