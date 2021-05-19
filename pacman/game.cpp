@@ -526,7 +526,10 @@ again:		//Load media
 			printf( "Failed to load media!\n" );
 		}
 		else
-		{	Mix_PlayChannel(-1, gIntro, 0);
+		{	Mix_VolumeChunk(gMunch_a, 2);
+			Mix_VolumeChunk(gIntro,2);
+			Mix_VolumeChunk(gDead,2);
+			Mix_PlayChannel(-1, gIntro, 0);
 		
 			string difficulty = "easy";
 			vector<node> nodes;
