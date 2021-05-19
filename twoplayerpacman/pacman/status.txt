@@ -1,0 +1,40 @@
+Status of current game:
+
+It is a two player game but does not use the sockets.
+Two players can play in a common window.
+One player uses up, down, left, right
+Other uses W, A, S, D for playing.
+
+At each gameplay a different random maze is created.
+
+There are two difficulty levels.
+Based on the difficulty the number of ghosts change
+
+In easy mode there is one ghost chasing each pacman.
+In hard mode there are two ghosts for each pacman.
+
+When a pacman is caught by ghost.
+It will not be able to collect coins.
+It becomes a ghost.
+Now it can chase the other pacman, kill it.
+
+When both pacman die the score of each pacman is shown.
+
+We go back to the home page.
+
+//////////////////////////////////////////////////////
+
+We tried implementing sockets but we faced problem in 
+transfering the data continuously.
+
+Our plan using sockets was:
+
+1)At the beginning sending the maze structure using sockets.
+  i.e., the coordinates and dimensions of the rectangles for maze.
+
+2)Then during playing we would send just transfer the coordinates of
+  the ghosts and pacman.
+  
+3)The handling of the rendering and movement of pacman will be done locally.
+
+
