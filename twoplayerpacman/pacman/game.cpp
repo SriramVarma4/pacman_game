@@ -594,6 +594,8 @@ again:		//Load media
 		}
 		else
 		{	
+			Mix_VolumeChunk(gDead, 2);
+			Mix_VolumeChunk(gMunch_a, 2);
 			string difficulty = "easy";
 			vector<node> nodes;
 			vector<SDL_Rect> small_points;
