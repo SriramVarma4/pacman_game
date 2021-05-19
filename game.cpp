@@ -760,6 +760,7 @@ again:		//Load media
 					textColor = {255,0,0};
 					SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
 					SDL_RenderClear(gRenderer);
+					Mix_PlayChannelTimed( -1,gMenu,0,6000);
 					if (pac1score>pac2score){
 						gyellowplayer.render(0,0);
 					}
@@ -772,6 +773,7 @@ again:		//Load media
 				else if(game_state == "summary" ){
 					SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
 					SDL_RenderClear( gRenderer );
+					Mix_PlayChannelTimed( -1,gMenu,0,6000);
 					gScoreboard.render(0,0);
 					textColor = {0,255,0};
 					gTextTexture.loadFromRenderedText( "SCORE = "+to_string(pac2score), textColor );
