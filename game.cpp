@@ -64,6 +64,8 @@ SDL_Renderer* gRenderer = NULL;
 Mix_Chunk *gMunch_a = NULL;
 Mix_Chunk *gMunch_b = NULL;
 Mix_Chunk *gDead = NULL;
+Mix_Chunk *gMenu = NULL;
+Mix_Chunk *gKill = NULL;
 //Scene textures Texture wrapper class
 LTexture gPac_ritTexture;
 LTexture gPac_leftTexture;
@@ -502,8 +504,20 @@ bool loadMedia()
 		printf( "Failed to load pellet munch_b sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
 		success = false;
 	}
+	gMenu = Mix_LoadWAV( "sound/Among Us Theme (mp3cut.net).wav" );
+	if( gMenu == NULL )
+	{
+		printf( "Failed to load pellet munch_b sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
 	gDead = Mix_LoadWAV( "sound/death.wav" );
 	if( gDead == NULL )
+	{
+		printf( "Failed to load dead chunk! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+	gKill= Mix_LoadWAV( "sound/Impostor Kill (online-audio-converter.com).wav" );
+	if( gKill == NULL )
 	{
 		printf( "Failed to load dead chunk! SDL_mixer Error: %s\n", Mix_GetError() );
 		success = false;
@@ -538,9 +552,12 @@ void close(){
 	//free sound effect
 	Mix_FreeChunk( gMunch_a );
 	Mix_FreeChunk(gMunch_b);
+	Mix_FreeChunk(gMenu);
+	Mix_FreeChunk(gKill);
 	gMunch_a = NULL;
 	gMunch_b = NULL;
-
+	gMenu = NULL;
+	gKill = NULL;
 	Mix_FreeChunk( gDead );
 	gDead = NULL;
 	//Destroy window	
@@ -559,7 +576,7 @@ void close(){
 
 bool gameover(){
 	bool success =true;
-	Mix_PlayChannel(-1,gDead,0);
+	Mix_PlayChannel(-1,gKill,0);
 	gPac_leftTexture.free();
 	gPac_ritTexture.free();
 	gPac_upTexture.free();
@@ -594,8 +611,10 @@ again:		//Load media
 		}
 		else
 		{	
+			Mix_VolumeChunk(gMenu,2);
 			Mix_VolumeChunk(gDead, 2);
 			Mix_VolumeChunk(gMunch_a, 2);
+			Mix_VolumeChunk(gKill, 2);
 			string difficulty = "easy";
 			vector<node> nodes;
 			vector<SDL_Rect> small_points;
@@ -794,6 +813,7 @@ again:		//Load media
 					endtimepac1 = time(NULL);
 					cout<<endtimepac1-startimepac<<endl;
 					player1 = false;
+					Mix_PlayChannel(-1,gKill,0);
 					pac.pactoghostrender(camera.x,camera.y);
 					
 				}else if(player1 && SDL_HasIntersection(&pac.PacBox, &gh2.PacBox)){
@@ -801,6 +821,7 @@ again:		//Load media
 					endtimepac1 = time(NULL);
 					cout<<endtimepac1-startimepac<<endl;
 					player1 = false;
+					Mix_PlayChannel(-1,gKill,0);
 					pac.pactoghostrender(camera.x,camera.y);
 					
 				}else if(player2 && SDL_HasIntersection(&pac1.PacBox, &gh1.PacBox)){
@@ -808,6 +829,7 @@ again:		//Load media
 					endtimepac2 = time(NULL);
 					player2 = false;
 					cout<<endtimepac2-startimepac<<endl;
+					Mix_PlayChannel(-1,gKill,0);
 					pac1.pactoghostrender(camera.x,camera.y);
 					
 				}else if(player2 && SDL_HasIntersection(&pac1.PacBox, &gh2.PacBox)){
@@ -815,6 +837,7 @@ again:		//Load media
 					endtimepac2 = time(NULL);
 					player2 = false;
 					cout<<endtimepac2-startimepac<<endl;
+					Mix_PlayChannel(-1,gKill,0);
 					pac1.pactoghostrender(camera.x,camera.y);
 					
 				}
@@ -825,7 +848,7 @@ again:		//Load media
 							endtimepac1 = time(NULL);
 							cout<<endtimepac1-startimepac<<endl;
 							player1 = false;
-							
+							Mix_PlayChannel(-1,gKill,0);
 							pac.pactoghostrender(camera.x,camera.y);
 							
 						}else if(SDL_HasIntersection(&pac.PacBox, &gh4.PacBox)){
@@ -833,7 +856,7 @@ again:		//Load media
 							endtimepac1 = time(NULL);
 							cout<<endtimepac1-startimepac<<endl;
 							player1 = false;
-							
+							Mix_PlayChannel(-1,gKill,0);
 							pac.pactoghostrender(camera.x,camera.y);
 				
 						}
@@ -844,6 +867,7 @@ again:		//Load media
 							endtimepac2 = time(NULL);
 							cout<<endtimepac2-startimepac<<endl;
 							player2 = false;
+							Mix_PlayChannel(-1,gKill,0);
 							pac1.pactoghostrender(camera.x,camera.y);
 					
 						}else if(SDL_HasIntersection(&pac1.PacBox, &gh4.PacBox)){
@@ -851,7 +875,7 @@ again:		//Load media
 							endtimepac2 = time(NULL);
 							cout<<endtimepac2-startimepac<<endl;
 							player2 = false;
-							
+							Mix_PlayChannel(-1,gKill,0);
 							pac1.pactoghostrender(camera.x,camera.y);
 						}
 					}
@@ -862,6 +886,7 @@ again:		//Load media
 					if(SDL_HasIntersection(&pac1.PacBox,&pac.PacBox)){
 						endtimepac2 = time(NULL);
 						cout<<endtimepac2-startimepac<<endl;
+						Mix_PlayChannel(-1,gKill,0);
 						player2=false;
 						
 					}
@@ -872,6 +897,7 @@ again:		//Load media
 						endtimepac1 = time(NULL);
 						cout<<endtimepac1-startimepac<<endl;
 						player1=false;		
+						Mix_PlayChannel(-1,gKill,0);
 					}
 				}
 				//Center the camera over the Pac
@@ -971,6 +997,7 @@ again:		//Load media
 					SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
 					SDL_RenderClear( gRenderer );
 					gstart.render(0,0);
+					Mix_PlayChannelTimed( -1,gMenu,0,6000);
 					SDL_RenderPresent( gRenderer );
 				}
 			}
