@@ -19,7 +19,7 @@ class Pac
 		static const int PAC_VEL = 5;
 
 		//Initializes the variables
-		Pac(vector<SDL_Rect> blocks,int ID);
+		Pac(vector<SDL_Rect> blocks);
 		//detects collision with the blocks
 		bool collision();
 
@@ -38,7 +38,6 @@ class Pac
         SDL_Rect PacBox;
     private:
 		//The X and Y offsets of the pac
-		int id;
 		int mPosX, mPosY;
 		int keyState;
         bool keychanged;

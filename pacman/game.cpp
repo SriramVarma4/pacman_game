@@ -67,12 +67,23 @@ SDL_Renderer* gRenderer = NULL;
 Mix_Chunk *gMunch_a = NULL;
 Mix_Chunk *gMunch_b = NULL;
 Mix_Chunk *gDead = NULL;
+Mix_Chunk *gIntro = NULL;
 //Scene textures Texture wrapper class
-LTexture gPacTexture;
-LTexture gBGTexture;	//this is the texture we got to manipulate
+LTexture gPac_ritTexture;
+LTexture gPac_leftTexture;
+LTexture gPac_upTexture;
+LTexture gPac_downTexture;
+LTexture gbottom_strip;
+LTexture gBGTexture;	//background
 LTexture gGameover;
 LTexture gGh1Texture;
-LTexture gspoint;
+LTexture gspoint;//	for rendering points
+LTexture gTextTexture;//for rendering score text
+LTexture gbpoint;
+LTexture gstart;
+
+TTF_Font *gFont = NULL; //FONT 
+
 
 bool LTexture::loadFromFile( std::string path ){
 	//Get rid of preexisting texture
@@ -144,10 +155,42 @@ void LTexture::render( int x, int y, SDL_Rect* clip, double angle, SDL_Point* ce
 	SDL_RenderCopyEx( gRenderer, mTexture, clip, &renderQuad, angle, center, flip );
 }
 
+bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColor ){
+	//Get rid of preexisting texture
+	free();
+	//Render text surface
+	SDL_Surface* textSurface = TTF_RenderText_Solid( gFont, textureText.c_str(), textColor );
+	if( textSurface == NULL )
+	{
+		printf( "Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError() );
+	}
+	else
+	{
+		//Create texture from surface pixels
+        mTexture = SDL_CreateTextureFromSurface( gRenderer, textSurface );
+		if( mTexture == NULL )
+		{
+			printf( "Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError() );
+		}
+		else{
+			//Get image dimensions
+			mWidth = 300;
+			mHeight = 30;
+		}
+		//Get rid of old surface
+		SDL_FreeSurface( textSurface );
+	}
+	//Return success
+	return mTexture != NULL;
+}
 
 void Pac::render( int camX, int camY ){
     //Show the pac relative to the camera
-	gPacTexture.render( mPosX - camX, mPosY - camY );
+	if(mVelX>0){gPac_ritTexture.render( mPosX - camX, mPosY - camY );}
+	else if(mVelX<0){gPac_leftTexture.render( mPosX - camX, mPosY - camY );}
+	else if(mVelY<0){gPac_upTexture.render( mPosX - camX, mPosY - camY );}
+	else if(mVelY>0){gPac_downTexture.render( mPosX - camX, mPosY - camY );}
+	else {gPac_ritTexture.render( mPosX - camX, mPosY - camY );}
 }
 
 void Ghost::render( int camX, int camY ){
@@ -173,7 +216,7 @@ bool init()
 			printf( "Warning: Linear texture filtering not enabled!" );
 		}
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT+50, SDL_WINDOW_SHOWN );
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -191,7 +234,7 @@ bool init()
 			else
 			{
 				//Initialize renderer color
-				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+				SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
 
 				//Initialize PNG loading
 				int imgFlags = IMG_INIT_PNG;
@@ -204,6 +247,12 @@ bool init()
 				if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
 				{
 					printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
+					success = false;
+				}
+				//Initialize SDL_ttf
+				if( TTF_Init() == -1 )
+				{
+					printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError() );
 					success = false;
 				}
 			}
@@ -219,13 +268,23 @@ bool loadMedia()
 	bool success = true;
 
 	//Load pac texture
-	if( !gPacTexture.loadFromFile( "images/player.png" ) )
-	{
+	if( !gPac_ritTexture.loadFromFile( "images/pac_rit.png" ) ){
 		printf( "Failed to load pacman texture!\n" );
 		success = false;
 	}
-	if( !gGameover.loadFromFile( "images/gameover.jpg" ) )
-	{
+	if( !gPac_leftTexture.loadFromFile( "images/pac_left.png" ) ){
+		printf( "Failed to load pacman texture!\n" );
+		success = false;
+	}
+	if( !gPac_upTexture.loadFromFile( "images/pac_up.png" ) ){
+		printf( "Failed to load pacman texture!\n" );
+		success = false;
+	}
+	if( !gPac_downTexture.loadFromFile( "images/pac_down.png" ) ){
+		printf( "Failed to load pacman texture!\n" );
+		success = false;
+	}
+	if( !gbottom_strip.loadFromFile( "images/bottom_strip.png" ) ){
 		printf( "Failed to load gameover texture!\n" );
 		success = false;
 	}
@@ -238,6 +297,14 @@ bool loadMedia()
 	if (!gspoint.loadFromFile("images/smallpoint.png"))
 	{
 		printf("Failed to load small points\n");
+		success = false;
+	}
+	if (!gbpoint.loadFromFile("images/bigpoint.png")){
+		printf("Failed to load big point\n");
+		success = false;
+	}
+	if (!gstart.loadFromFile("images/start.jpg")){
+		printf("Failed to load start\n");
 		success = false;
 	}
 	//Load background texture
@@ -373,9 +440,21 @@ bool loadMedia()
 		success = false;
 	}
 	gDead = Mix_LoadWAV( "sound/death.wav" );
-	if( gDead == NULL )
-	{
+	if( gDead == NULL ){
 		printf( "Failed to load dead chunk! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+	gIntro = Mix_LoadWAV( "sound/intro.wav" );
+	if( gIntro == NULL ){
+		printf( "Failed to load intro chunk! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+
+	//Open the font
+	gFont = TTF_OpenFont( "CONSOLA.TTF", 28 );
+	if( gFont == NULL )
+	{
+		printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
 		success = false;
 	}
 	return success;
@@ -383,9 +462,16 @@ bool loadMedia()
 
 void close(){
 //Free loaded images
-	gPacTexture.free();
+	gPac_leftTexture.free();
+	gPac_ritTexture.free();
+	gPac_upTexture.free();
+	gPac_downTexture.free();
+	gbottom_strip.free();
 	gBGTexture.free();
 	gGh1Texture.free();
+	gstart.free();
+	gbpoint.free();
+	gspoint.free();
 	gGameover.free();
 	//free sound effect
 	Mix_FreeChunk( gMunch_a );
@@ -395,6 +481,8 @@ void close(){
 
 	Mix_FreeChunk( gDead );
 	gDead = NULL;
+	Mix_FreeChunk( gIntro);
+	gIntro = NULL;
 	//Destroy window	
 	SDL_DestroyRenderer( gRenderer );
 	SDL_DestroyWindow( gWindow );
@@ -404,15 +492,20 @@ void close(){
 	IMG_Quit();
 	SDL_Quit();
 	Mix_Quit();
+	//Free global font
+	TTF_CloseFont( gFont ); gFont = NULL; TTF_Quit();
 }
 
 
 bool gameover(){
 	bool success =true;
 	Mix_PlayChannel(-1,gDead,0);
-	gPacTexture.free();
-	gBGTexture.free();
-	gGh1Texture.free();
+	gPac_leftTexture.free();
+	gPac_ritTexture.free();
+	gPac_upTexture.free();
+	gPac_downTexture.free();
+	//gBGTexture.free();
+	//gGh1Texture.free();
 	red_blocks.clear();
 
 	return success;
@@ -433,10 +526,12 @@ again:		//Load media
 			printf( "Failed to load media!\n" );
 		}
 		else
-		{	
+		{	Mix_PlayChannel(-1, gIntro, 0);
+		
+			string difficulty = "easy";
 			vector<node> nodes;
 			vector<SDL_Rect> small_points;
-			
+			vector<SDL_Rect> big_points;
 			int no_redblks = red_blocks.size();
 			bool intersects =false;
 			int no_paths = 4;
@@ -481,6 +576,7 @@ again:		//Load media
 						}
 						if(no_paths == 1){
 							push = true;
+							big_points.push_back(block);
 						}
 						else if(no_paths>2){
 							push = true;
@@ -510,18 +606,19 @@ again:		//Load media
 			
 			//Main loop flag
 			bool quit = false;
-			bool over = false;
+			string game_state = "start";
+			SDL_Color textColor = { 255, 255, 0 };// yellow
+			int score = 0;
 			//Event handler
 			SDL_Event e;
 
 			//The Pac that will be moving around on the screen
-			Pac pac(red_blocks,0);
-			Pac pac1(red_blocks,1);
+			Pac pac(red_blocks);
 
 			Ghost gh1(red_blocks, nodes, 0);
-			Ghost gh2(red_blocks, nodes, 1);
-			Ghost gh3(red_blocks, nodes, 3);
-			Ghost gh4(red_blocks, nodes, 5);
+			Ghost gh2(red_blocks, nodes, 2);
+			Ghost gh3(red_blocks, nodes, 1);
+			Ghost gh4(red_blocks, nodes, 3);
  
 			//The camera area
 			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
@@ -538,37 +635,67 @@ again:		//Load media
 					}
 					//Handle input for the Pac
 					pac.handleEvent( e );
-					pac1.handleEvent(e);
+					if( e.type == SDL_KEYDOWN && e.key.repeat == 0 )
+    				{
+        				if( e.key.keysym.sym == SDLK_y)
+        				{
+							goto again;
+        				}
+						if(game_state == "start"){
+							if( e.key.keysym.sym == SDLK_h){
+								game_state = "play";
+								difficulty = "hard";
+								gh1.freetime = 100; gh2.freetime = 100;
+								gh3.freetime = 100; gh4.freetime = 100;
+        					}else if(e.key.keysym.sym == SDLK_m){
+								game_state = "play";
+								difficulty = "medium";
+								gh1.freetime = 200; gh2.freetime = 200;
+								gh3.freetime = 200;
+							}
+							else if ( e.key.keysym.sym == SDLK_e){
+								game_state = "play";
+							}
+						}
+    				}
+
 				}
-				if(over){ //Clear screen
-					SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0x00 );
+				if(game_state == "over"){ //Clear screen
+					textColor = {255,0,0};
+					SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
 					SDL_RenderClear( gRenderer );
 					//Render background
-					gGameover.render( 0, 0);
+					gBGTexture.render( 0, 0, &camera );
+					gTextTexture.loadFromRenderedText( "To play again press Y", textColor );
+					gTextTexture.render( 0, 620 );
+					gTextTexture.loadFromRenderedText( "GAME OVER SCORE = "+to_string(score), textColor );
+					gTextTexture.render( 400, 620 );
 					SDL_RenderPresent( gRenderer );
-					//goto again;
+					
 				}
-				else{
+				else if(game_state == "play"){
 				//Move the Pac
 				pac.move();
-				//pac1.move();
 				gh1.move(pac.getPosX(), pac.getPosY());
 				gh2.move(pac.getPosX(), pac.getPosY());
-				gh3.move(pac.getPosX(), pac.getPosY());
-				gh4.move(pac.getPosX(), pac.getPosY());
+				if (difficulty != "easy"){
+					gh3.move(pac.getPosX(), pac.getPosY());
+					if(difficulty == "hard"){
+						gh4.move(pac.getPosX(), pac.getPosY());
+					}
+				}
 
 				if(SDL_HasIntersection(&pac.PacBox, &gh1.PacBox)){
-					printf("GAME OVER caught by Ghost 1\n");
-					over = true; gameover();
+					game_state = "over"; gameover();
 				}else if(SDL_HasIntersection(&pac.PacBox, &gh2.PacBox)){
-					printf("GAME OVER caught by Ghost 2\n");
-					over = true; gameover();
-				}else if(SDL_HasIntersection(&pac.PacBox, &gh3.PacBox)){
-					printf("GAME OVER caught by Ghost 3\n");
-					over = true; gameover();
-				}else if(SDL_HasIntersection(&pac.PacBox, &gh4.PacBox)){
-					printf("GAME OVER caught by Ghost 4\n");
-					over = true; gameover();
+					game_state = "over"; gameover();
+				}
+				if (difficulty != "easy"){
+					if(SDL_HasIntersection(&pac.PacBox, &gh3.PacBox)){
+						game_state = "over"; gameover();
+					}else if(difficulty == "hard" && SDL_HasIntersection(&pac.PacBox, &gh4.PacBox)){
+						game_state = "over"; gameover();
+					}
 				}
 				//Center the camera over the Pac
 				camera.x = ( pac.getPosX() + Pac::PAC_WIDTH / 2 ) - SCREEN_WIDTH / 2;
@@ -584,7 +711,7 @@ again:		//Load media
 				if( camera.y > LEVEL_HEIGHT - camera.h ){ camera.y = LEVEL_HEIGHT - camera.h; }
 
 				//Clear screen
-				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+				SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
 				SDL_RenderClear( gRenderer );
 				//Render background
 				gBGTexture.render( 0, 0, &camera );
@@ -596,20 +723,46 @@ again:		//Load media
 						Mix_PlayChannel( -1, gMunch_a, 0 );
 						//Mix_PlayChannel( -1, gMunch_b, 0 );
 						small_points.erase(small_points.begin()+i);
+						score += 10;
+						gTextTexture.loadFromRenderedText( "score = "+to_string(score), textColor );
 						continue;
 					}
 					gspoint.render(block.x - camera.x+10, block.y - camera.y+10);
+				}
+
+				for(int i=0; i<big_points.size(); i++){
+					SDL_Rect block = big_points[i];
+					if(SDL_HasIntersection(&pac.PacBox, &block)){
+						big_points.erase(big_points.begin()+i);
+						score+=50;
+						gTextTexture.loadFromRenderedText( "score = "+to_string(score), textColor );
+						continue;
+					}
+					gbpoint.render(block.x - camera.x, block.y-camera.y);
 				}
 				
 				//Render objects
 				gh1.render(camera.x, camera.y);
 				gh2.render(camera.x, camera.y);
-				gh3.render(camera.x, camera.y);
-				gh4.render(camera.x, camera.y);
+				if(difficulty != "easy"){
+					gh3.render(camera.x, camera.y);
+					if(difficulty == "hard"){
+						gh4.render(camera.x, camera.y);
+					}
+				}
 				pac.render( camera.x, camera.y);
-				pac1.render(camera.x,camera.y);
+				gbottom_strip.render(0,600);
+				//render score
+				gTextTexture.render( 0, 620 );
 				//Update screen
 				SDL_RenderPresent( gRenderer );
+				}
+				else if(game_state == "start"){
+					SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
+					SDL_RenderClear( gRenderer );
+					gstart.render(0,0);
+					SDL_RenderPresent( gRenderer );
+					//sleep(3000);
 				}
 			}
 		}
